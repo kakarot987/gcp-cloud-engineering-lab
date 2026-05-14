@@ -10,8 +10,8 @@ set -e  # Exit on any error
 # Default values
 PROJECT_ID="${1:-$(gcloud config get-value project)}"
 
-echo "🚀 Setting up IAM for GCP Lab Environment"
-echo "📍 Project: $PROJECT_ID"
+echo " Setting up IAM for GCP Lab Environment"
+echo " Project: $PROJECT_ID"
 echo
 
 # Validate inputs
@@ -22,7 +22,7 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # Set project
-echo "🔧 Setting project to: $PROJECT_ID"
+echo " Setting project to: $PROJECT_ID"
 gcloud config set project "$PROJECT_ID"
 
 # Service account configurations
@@ -39,7 +39,7 @@ create_service_account() {
     local description="$2"
     local sa_email="${sa_name}@${PROJECT_ID}.iam.gserviceaccount.com"
 
-    echo "👤 Creating service account: $sa_name"
+    echo " Creating service account: $sa_name"
 
     # Check if service account already exists
     if gcloud iam service-accounts describe "$sa_email" &>/dev/null; then
@@ -61,10 +61,10 @@ grant_roles() {
     local roles=("${@:2}")
     local sa_email="${sa_name}@${PROJECT_ID}.iam.gserviceaccount.com"
 
-    echo "🔑 Granting roles to: $sa_name"
+    echo " Granting roles to: $sa_name"
 
     for role in "${roles[@]}"; do
-        echo "   📋 Granting role: $role"
+        echo "    Granting role: $role"
         gcloud projects add-iam-policy-binding "$PROJECT_ID" \
             --member="serviceAccount:$sa_email" \
             --role="$role" \
@@ -75,14 +75,14 @@ grant_roles() {
 }
 
 # Create service accounts
-echo "🏗️  Creating service accounts..."
+echo "️  Creating service accounts..."
 
 for sa_name in "${!SERVICE_ACCOUNTS[@]}"; do
     create_service_account "$sa_name" "${SERVICE_ACCOUNTS[$sa_name]}"
 done
 
 echo
-echo "🔑 Granting IAM roles..."
+echo " Granting IAM roles..."
 
 # App Backend Service Account
 grant_roles "app-backend" \
@@ -116,7 +116,7 @@ grant_roles "ci-cd" \
     "roles/run.admin"
 
 echo
-echo "🔐 Creating service account keys (for external use)..."
+echo " Creating service account keys (for external use)..."
 
 # Create keys directory
 KEYS_DIR="./service-account-keys"
@@ -128,7 +128,7 @@ create_sa_key() {
     local sa_email="${sa_name}@${PROJECT_ID}.iam.gserviceaccount.com"
     local key_file="$KEYS_DIR/${sa_name}-key.json"
 
-    echo "🔑 Creating key for: $sa_name"
+    echo " Creating key for: $sa_name"
 
     # Create key
     gcloud iam service-accounts keys create "$key_file" \
@@ -144,14 +144,14 @@ create_sa_key "app-backend"
 create_sa_key "data-pipeline"
 
 echo
-echo "👥 Setting up user roles (optional - requires user email)..."
+echo " Setting up user roles (optional - requires user email)..."
 
 # Function to grant user roles (commented out - requires user input)
 grant_user_roles() {
     local user_email="$1"
 
     if [ -n "$user_email" ]; then
-        echo "👤 Granting roles to user: $user_email"
+        echo " Granting roles to user: $user_email"
 
         # Developer role
         gcloud projects add-iam-policy-binding "$PROJECT_ID" \
@@ -173,7 +173,7 @@ grant_user_roles() {
 # grant_user_roles "your-email@example.com"
 
 echo
-echo "📋 Creating custom roles (optional)..."
+echo " Creating custom roles (optional)..."
 
 # Example custom role for read-only access
 CUSTOM_ROLE_YAML=$(cat << EOF
@@ -191,7 +191,7 @@ EOF
 )
 
 # Uncomment to create custom role
-# echo "🔧 Creating custom role: customReadOnly"
+# echo " Creating custom role: customReadOnly"
 # gcloud iam roles create customReadOnly \
 #     --project="$PROJECT_ID" \
 #     --file=<(echo "$CUSTOM_ROLE_YAML")
@@ -199,27 +199,27 @@ EOF
 echo
 echo "✅ IAM Setup Complete!"
 echo
-echo "📊 Summary:"
+echo " Summary:"
 echo "   Project: $PROJECT_ID"
 echo "   Service Accounts Created: ${#SERVICE_ACCOUNTS[@]}"
 echo
-echo "👤 Service Accounts:"
+echo " Service Accounts:"
 for sa_name in "${!SERVICE_ACCOUNTS[@]}"; do
     sa_email="${sa_name}@${PROJECT_ID}.iam.gserviceaccount.com"
     echo "   • $sa_name: $sa_email"
 done
 echo
-echo "🔑 Service Account Keys:"
-echo "   📁 Location: $KEYS_DIR/"
+echo " Service Account Keys:"
+echo "    Location: $KEYS_DIR/"
 echo "   ⚠️  IMPORTANT: Keys are sensitive - store securely!"
 echo
-echo "🔍 To verify IAM setup:"
+echo " To verify IAM setup:"
 echo "   gcloud iam service-accounts list"
 echo "   gcloud projects get-iam-policy $PROJECT_ID --flatten='bindings[].members' --filter='bindings.members~serviceAccount'"
 echo
-echo "🧪 Test service account permissions:"
+echo " Test service account permissions:"
 echo "   gcloud compute instances list --account=app-backend@$PROJECT_ID.iam.gserviceaccount.com"
 echo
-echo "🧹 Cleanup (if needed):"
+echo " Cleanup (if needed):"
 echo "   rm -rf $KEYS_DIR/"
 echo "   gcloud iam service-accounts delete app-backend@$PROJECT_ID.iam.gserviceaccount.com"

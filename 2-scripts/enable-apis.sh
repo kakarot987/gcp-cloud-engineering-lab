@@ -10,8 +10,8 @@ set -e  # Exit on any error
 # Default values
 PROJECT_ID="${1:-$(gcloud config get-value project)}"
 
-echo "🚀 Enabling GCP APIs for Lab Environment"
-echo "📍 Project: $PROJECT_ID"
+echo " Enabling GCP APIs for Lab Environment"
+echo " Project: $PROJECT_ID"
 echo
 
 # Validate inputs
@@ -22,7 +22,7 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # Set project
-echo "🔧 Setting project to: $PROJECT_ID"
+echo " Setting project to: $PROJECT_ID"
 gcloud config set project "$PROJECT_ID"
 
 # Core APIs (always needed)
@@ -83,7 +83,7 @@ enable_apis() {
         api_string="$api_string --service=$api"
     done
 
-    echo "📦 Enabling APIs: ${api_list[*]}"
+    echo " Enabling APIs: ${api_list[*]}"
     if gcloud services enable $api_string --quiet; then
         echo "✅ Successfully enabled ${#api_list[@]} API(s)"
     else
@@ -93,27 +93,27 @@ enable_apis() {
 }
 
 # Enable APIs in batches
-echo "🔧 Enabling Core APIs..."
+echo " Enabling Core APIs..."
 enable_apis "${CORE_APIS[@]}"
 
 echo
-echo "🗄️  Enabling Database APIs..."
+echo "️  Enabling Database APIs..."
 enable_apis "${DATABASE_APIS[@]}"
 
 echo
-echo "🐳 Enabling Container & Serverless APIs..."
+echo " Enabling Container & Serverless APIs..."
 enable_apis "${CONTAINER_APIS[@]}"
 
 echo
-echo "🌐 Enabling Networking APIs..."
+echo " Enabling Networking APIs..."
 enable_apis "${NETWORKING_APIS[@]}"
 
 echo
-echo "📊 Enabling Observability APIs..."
+echo " Enabling Observability APIs..."
 enable_apis "${OBSERVABILITY_APIS[@]}"
 
 echo
-echo "🛠️  Enabling Development APIs..."
+echo "️  Enabling Development APIs..."
 enable_apis "${DEVELOPMENT_APIS[@]}"
 
 # Wait for APIs to be enabled
@@ -122,7 +122,7 @@ echo "⏳ Waiting for APIs to be fully enabled..."
 sleep 10
 
 # Verify APIs are enabled
-echo "🔍 Verifying API status..."
+echo " Verifying API status..."
 ENABLED_APIS=$(gcloud services list --enabled --format="value(config.name)" --project="$PROJECT_ID")
 
 # Count enabled APIs
@@ -131,11 +131,11 @@ API_COUNT=$(echo "$ENABLED_APIS" | wc -l)
 echo
 echo "✅ API Enablement Complete!"
 echo
-echo "📊 Summary:"
+echo " Summary:"
 echo "   Project: $PROJECT_ID"
 echo "   APIs Enabled: $API_COUNT"
 echo
-echo "🔍 Key APIs now available:"
+echo " Key APIs now available:"
 echo "   ✅ Compute Engine (compute.googleapis.com)"
 echo "   ✅ Cloud Storage (storage-api.googleapis.com)"
 echo "   ✅ Cloud SQL (sqladmin.googleapis.com)"
@@ -147,10 +147,10 @@ echo "   ✅ Cloud Build (cloudbuild.googleapis.com)"
 echo "   ✅ Cloud Monitoring (monitoring.googleapis.com)"
 echo "   ✅ Cloud Logging (logging.googleapis.com)"
 echo
-echo "📋 To check all enabled APIs:"
+echo " To check all enabled APIs:"
 echo "   gcloud services list --enabled --project=$PROJECT_ID"
 echo
-echo "🧪 Test APIs with:"
+echo " Test APIs with:"
 echo "   gcloud compute zones list"
 echo "   gsutil ls"
 echo "   gcloud sql instances list"

@@ -18,11 +18,11 @@ REGION="${ZONE%-*}"
 MACHINE_TYPE="n1-standard-1"
 DISK_SIZE="50GB"
 
-echo "🚀 Creating GKE Cluster"
-echo "📍 Project: $PROJECT_ID"
+echo " Creating GKE Cluster"
+echo " Project: $PROJECT_ID"
 echo "☸️  Cluster: $CLUSTER_NAME"
-echo "🌍 Zone: $ZONE"
-echo "🖥️  Nodes: $NODE_COUNT"
+echo " Zone: $ZONE"
+echo "️  Nodes: $NODE_COUNT"
 echo
 
 # Validate inputs
@@ -33,7 +33,7 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # Enable required APIs
-echo "📦 Enabling required APIs..."
+echo " Enabling required APIs..."
 gcloud services enable container.googleapis.com --quiet
 
 # Check if cluster already exists
@@ -45,7 +45,7 @@ fi
 # Create VPC if it doesn't exist (for demo purposes)
 VPC_NAME="gke-vpc"
 if ! gcloud compute networks describe "$VPC_NAME" --project="$PROJECT_ID" &>/dev/null; then
-    echo "🏗️  Creating VPC for GKE cluster..."
+    echo "️  Creating VPC for GKE cluster..."
     gcloud compute networks create "$VPC_NAME" \
         --subnet-mode=custom \
         --bgp-routing-mode=regional \
@@ -63,7 +63,7 @@ if ! gcloud compute networks describe "$VPC_NAME" --project="$PROJECT_ID" &>/dev
 fi
 
 # Create GKE cluster
-echo "🏗️  Creating GKE cluster..."
+echo "️  Creating GKE cluster..."
 gcloud container clusters create "$CLUSTER_NAME" \
     --zone="$ZONE" \
     --num-nodes="$NODE_COUNT" \
@@ -82,17 +82,17 @@ gcloud container clusters create "$CLUSTER_NAME" \
     --quiet
 
 # Get cluster credentials
-echo "🔑 Getting cluster credentials..."
+echo " Getting cluster credentials..."
 gcloud container clusters get-credentials "$CLUSTER_NAME" \
     --zone="$ZONE" \
     --project="$PROJECT_ID"
 
 # Verify cluster
-echo "🔍 Verifying cluster..."
+echo " Verifying cluster..."
 kubectl get nodes
 
 # Create a sample deployment
-echo "📦 Creating sample application..."
+echo " Creating sample application..."
 
 # Create namespace
 kubectl create namespace gcp-ace-lab --dry-run=client -o yaml | kubectl apply -f -
@@ -169,7 +169,7 @@ EXTERNAL_IP=$(kubectl get service hello-gke-service -n gcp-ace-lab -o jsonpath='
 echo
 echo "✅ GKE cluster '$CLUSTER_NAME' created successfully!"
 echo
-echo "📊 Cluster Details:"
+echo " Cluster Details:"
 echo "   Name: $CLUSTER_NAME"
 echo "   Zone: $ZONE"
 echo "   Nodes: $NODE_COUNT ($MACHINE_TYPE)"
@@ -179,7 +179,7 @@ echo "   Autoscaling: 1-5 nodes"
 echo "   Autorepair: Enabled"
 echo "   Autoupgrade: Enabled"
 echo
-echo "📦 Sample Application:"
+echo " Sample Application:"
 echo "   Namespace: gcp-ace-lab"
 echo "   Deployment: hello-gke (2 replicas)"
 echo "   Service: hello-gke-service (LoadBalancer)"
@@ -188,26 +188,26 @@ if [ -n "$EXTERNAL_IP" ]; then
     echo "   URL: http://$EXTERNAL_IP"
 fi
 echo
-echo "🛠️  Management Commands:"
+echo "️  Management Commands:"
 echo "   Get nodes: kubectl get nodes"
 echo "   Get pods: kubectl get pods -n gcp-ace-lab"
 echo "   Get services: kubectl get services -n gcp-ace-lab"
 echo "   Scale deployment: kubectl scale deployment hello-gke --replicas=3 -n gcp-ace-lab"
 echo "   View logs: kubectl logs -l app=hello-gke -n gcp-ace-lab"
 echo
-echo "🔧 GKE Commands:"
+echo " GKE Commands:"
 echo "   Resize cluster: gcloud container clusters resize $CLUSTER_NAME --num-nodes=5 --zone=$ZONE"
 echo "   Upgrade cluster: gcloud container clusters upgrade $CLUSTER_NAME --zone=$ZONE"
 echo "   Delete cluster: gcloud container clusters delete $CLUSTER_NAME --zone=$ZONE"
 echo
-echo "🧪 Test the application:"
+echo " Test the application:"
 if [ -n "$EXTERNAL_IP" ]; then
     echo "   curl http://$EXTERNAL_IP"
 else
     echo "   kubectl get service hello-gke-service -n gcp-ace-lab -w"
 fi
 echo
-echo "📋 Useful kubectl commands:"
+echo " Useful kubectl commands:"
 echo "   kubectl get all -n gcp-ace-lab"
 echo "   kubectl describe pod -l app=hello-gke -n gcp-ace-lab"
 echo "   kubectl exec -it deployment/hello-gke -n gcp-ace-lab -- /bin/sh"

@@ -14,10 +14,10 @@ BACKUP_DESCRIPTION="${2:-Manual backup from script}"
 # Configuration
 PROJECT_ID="$(gcloud config get-value project)"
 
-echo "🚀 Creating Cloud SQL Backup"
-echo "📍 Project: $PROJECT_ID"
-echo "🗄️  Instance: $INSTANCE_NAME"
-echo "📝 Description: $BACKUP_DESCRIPTION"
+echo " Creating Cloud SQL Backup"
+echo " Project: $PROJECT_ID"
+echo "️  Instance: $INSTANCE_NAME"
+echo " Description: $BACKUP_DESCRIPTION"
 echo
 
 # Validate inputs
@@ -43,7 +43,7 @@ INSTANCE_INFO=$(gcloud sql instances describe "$INSTANCE_NAME" \
 DATABASE_VERSION=$(echo "$INSTANCE_INFO" | cut -d$'\t' -f1)
 REGION=$(echo "$INSTANCE_INFO" | cut -d$'\t' -f2)
 
-echo "📊 Instance Details:"
+echo " Instance Details:"
 echo "   Database: $DATABASE_VERSION"
 echo "   Region: $REGION"
 echo
@@ -52,7 +52,7 @@ echo
 BACKUP_ID="backup-$(date +%Y%m%d-%H%M%S)"
 
 # Create backup
-echo "💾 Creating backup: $BACKUP_ID"
+echo " Creating backup: $BACKUP_ID"
 gcloud sql backups create "$BACKUP_ID" \
     --instance="$INSTANCE_NAME" \
     --description="$BACKUP_DESCRIPTION" \
@@ -97,27 +97,27 @@ BACKUP_SIZE=$(echo "$BACKUP_DETAILS" | cut -d$'\t' -f2)
 echo
 echo "✅ Backup created successfully!"
 echo
-echo "📊 Backup Details:"
+echo " Backup Details:"
 echo "   ID: $BACKUP_ID"
 echo "   Instance: $INSTANCE_NAME"
 echo "   Created: $CREATE_TIME"
 echo "   Size: $BACKUP_SIZE"
 echo "   Description: $BACKUP_DESCRIPTION"
 echo
-echo "📋 Management Commands:"
+echo " Management Commands:"
 echo "   List backups: gcloud sql backups list --instance=$INSTANCE_NAME"
 echo "   Describe backup: gcloud sql backups describe $BACKUP_ID --instance=$INSTANCE_NAME"
 echo "   Restore from backup: gcloud sql backups restore $BACKUP_ID --restore-instance=new-instance --instance=$INSTANCE_NAME"
 echo "   Delete backup: gcloud sql backups delete $BACKUP_ID --instance=$INSTANCE_NAME"
 echo
-echo "🔄 Automated Backup Setup:"
+echo " Automated Backup Setup:"
 echo "   # Enable automated backups"
 echo "   gcloud sql instances patch $INSTANCE_NAME --backup-start-time=03:00"
 echo
 echo "   # Set backup retention"
 echo "   gcloud sql instances patch $INSTANCE_NAME --retained-backups-count=7"
 echo
-echo "🧪 Test restore (create new instance):"
+echo " Test restore (create new instance):"
 echo "   gcloud sql instances create restored-instance \\"
 echo "     --region=$REGION \\"
 echo "     --database-version=$DATABASE_VERSION \\"

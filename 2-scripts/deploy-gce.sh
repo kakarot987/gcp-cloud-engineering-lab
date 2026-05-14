@@ -22,11 +22,11 @@ BOOT_DISK_SIZE="20GB"
 TAGS="web-server"
 SERVICE_ACCOUNT=""
 
-echo "🚀 Deploying GCE Instance: $INSTANCE_NAME"
-echo "📍 Project: $PROJECT_ID"
-echo "🌍 Zone: $ZONE"
-echo "💻 Machine Type: $MACHINE_TYPE"
-echo "🏗️  Subnet: $SUBNET"
+echo " Deploying GCE Instance: $INSTANCE_NAME"
+echo " Project: $PROJECT_ID"
+echo " Zone: $ZONE"
+echo " Machine Type: $MACHINE_TYPE"
+echo "️  Subnet: $SUBNET"
 echo
 
 # Validate inputs
@@ -37,7 +37,7 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # Check if VPC and subnet exist
-echo "🔍 Checking VPC and subnet..."
+echo " Checking VPC and subnet..."
 if ! gcloud compute networks describe "$VPC_NAME" --project="$PROJECT_ID" &>/dev/null; then
     echo "❌ Error: VPC '$VPC_NAME' does not exist"
     echo "Run: ./create-vpc.sh first"
@@ -106,7 +106,7 @@ cat > /var/www/html/index.html << 'HTML'
 </head>
 <body>
     <div class="container">
-        <h1>🚀 GCP Associate Cloud Engineer Lab</h1>
+        <h1> GCP Associate Cloud Engineer Lab</h1>
         <div class="info">
             <h2>Instance Information</h2>
             <p><strong>Hostname:</strong> <span id="hostname"></span></p>
@@ -163,7 +163,7 @@ EOF
 )
 
 # Create the instance
-echo "🏗️  Creating Compute Engine instance..."
+echo "️  Creating Compute Engine instance..."
 gcloud compute instances create "$INSTANCE_NAME" \
     --zone="$ZONE" \
     --machine-type="$MACHINE_TYPE" \
@@ -198,7 +198,7 @@ INTERNAL_IP=$(gcloud compute instances describe "$INSTANCE_NAME" \
 echo
 echo "✅ Instance '$INSTANCE_NAME' deployed successfully!"
 echo
-echo "📊 Instance Details:"
+echo " Instance Details:"
 echo "   Name: $INSTANCE_NAME"
 echo "   Zone: $ZONE"
 echo "   Machine Type: $MACHINE_TYPE"
@@ -207,12 +207,12 @@ echo "   Internal IP: $INTERNAL_IP"
 echo "   Web URL: http://$EXTERNAL_IP"
 echo "   Health Check: http://$EXTERNAL_IP/health"
 echo
-echo "🔧 Management Commands:"
+echo " Management Commands:"
 echo "   SSH: gcloud compute ssh $INSTANCE_NAME --zone=$ZONE"
 echo "   Logs: gcloud compute instances get-serial-port-output $INSTANCE_NAME --zone=$ZONE"
 echo "   Stop: gcloud compute instances stop $INSTANCE_NAME --zone=$ZONE"
 echo "   Delete: gcloud compute instances delete $INSTANCE_NAME --zone=$ZONE"
 echo
-echo "🌐 Test the web server:"
+echo " Test the web server:"
 echo "   curl http://$EXTERNAL_IP"
 echo "   Open http://$EXTERNAL_IP in your browser"

@@ -12,9 +12,9 @@ PROJECT_ID="${1:-$(gcloud config get-value project)}"
 REGION="${2:-us-central1}"
 VPC_NAME="${3:-custom-vpc}"
 
-echo "🚀 Creating VPC Network: $VPC_NAME"
-echo "📍 Project: $PROJECT_ID"
-echo "🌍 Region: $REGION"
+echo " Creating VPC Network: $VPC_NAME"
+echo " Project: $PROJECT_ID"
+echo " Region: $REGION"
 echo
 
 # Validate inputs
@@ -25,22 +25,22 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # Set project
-echo "🔧 Setting project to: $PROJECT_ID"
+echo " Setting project to: $PROJECT_ID"
 gcloud config set project "$PROJECT_ID"
 
 # Enable required APIs
-echo "📦 Enabling required APIs..."
+echo " Enabling required APIs..."
 gcloud services enable compute.googleapis.com --quiet
 
 # Create VPC network
-echo "🏗️  Creating VPC network: $VPC_NAME"
+echo "️  Creating VPC network: $VPC_NAME"
 gcloud compute networks create "$VPC_NAME" \
     --subnet-mode=custom \
     --bgp-routing-mode=regional \
     --description="Custom VPC for GCP ACE Lab"
 
 # Create subnets
-echo "🏗️  Creating subnets..."
+echo "️  Creating subnets..."
 
 # Web subnet
 gcloud compute networks subnets create "${VPC_NAME}-web" \
@@ -64,7 +64,7 @@ gcloud compute networks subnets create "${VPC_NAME}-db" \
     --description="Database tier subnet"
 
 # Create firewall rules
-echo "🔥 Creating firewall rules..."
+echo " Creating firewall rules..."
 
 # Allow SSH from anywhere (restrict in production!)
 gcloud compute firewall-rules create "${VPC_NAME}-allow-ssh" \
@@ -99,13 +99,13 @@ gcloud compute firewall-rules create "${VPC_NAME}-allow-db" \
 echo
 echo "✅ VPC Network '$VPC_NAME' created successfully!"
 echo
-echo "📊 Summary:"
+echo " Summary:"
 echo "   VPC: $VPC_NAME (10.0.0.0/16)"
 echo "   Web Subnet: ${VPC_NAME}-web (10.0.1.0/24)"
 echo "   App Subnet: ${VPC_NAME}-app (10.0.2.0/24)"
 echo "   DB Subnet: ${VPC_NAME}-db (10.0.3.0/24)"
 echo
-echo "🔍 To verify:"
+echo " To verify:"
 echo "   gcloud compute networks describe $VPC_NAME"
 echo "   gcloud compute networks subnets list --network=$VPC_NAME"
 echo "   gcloud compute firewall-rules list --filter=\"network:$VPC_NAME\""

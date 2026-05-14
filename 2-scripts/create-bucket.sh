@@ -15,11 +15,11 @@ STORAGE_CLASS="${3:-STANDARD}"
 # Configuration
 PROJECT_ID="$(gcloud config get-value project)"
 
-echo "🚀 Creating Cloud Storage Bucket"
-echo "📍 Project: $PROJECT_ID"
-echo "🪣  Bucket: $BUCKET_NAME"
-echo "🌍 Location: $LOCATION"
-echo "💾 Storage Class: $STORAGE_CLASS"
+echo " Creating Cloud Storage Bucket"
+echo " Project: $PROJECT_ID"
+echo "  Bucket: $BUCKET_NAME"
+echo " Location: $LOCATION"
+echo " Storage Class: $STORAGE_CLASS"
 echo
 
 # Validate inputs
@@ -46,7 +46,7 @@ if gsutil ls -b "gs://$BUCKET_NAME" &>/dev/null; then
 fi
 
 # Create bucket
-echo "🏗️  Creating bucket: gs://$BUCKET_NAME"
+echo "️  Creating bucket: gs://$BUCKET_NAME"
 gsutil mb \
     -p "$PROJECT_ID" \
     -c "$STORAGE_CLASS" \
@@ -55,7 +55,7 @@ gsutil mb \
     "gs://$BUCKET_NAME"
 
 # Set uniform bucket-level access
-echo "🔒 Enabling uniform bucket-level access..."
+echo " Enabling uniform bucket-level access..."
 gsutil uniformbucketlevelaccess set on "gs://$BUCKET_NAME"
 
 # Create lifecycle policy for cost optimization
@@ -85,11 +85,11 @@ echo "♻️  Setting lifecycle policy..."
 echo "$LIFECYCLE_CONFIG" | gsutil lifecycle set - "gs://$BUCKET_NAME"
 
 # Enable versioning
-echo "📝 Enabling versioning..."
+echo " Enabling versioning..."
 gsutil versioning set on "gs://$BUCKET_NAME"
 
 # Create sample files and folders
-echo "📁 Creating sample structure..."
+echo " Creating sample structure..."
 
 # Create folders
 gsutil mkdir "gs://$BUCKET_NAME/logs/"
@@ -116,22 +116,22 @@ CORS_CONFIG=$(cat << EOF
 EOF
 )
 
-echo "🌐 Setting CORS policy..."
+echo " Setting CORS policy..."
 echo "$CORS_CONFIG" | gsutil cors set - "gs://$BUCKET_NAME"
 
 # Make sample files publicly readable (for demo purposes)
-echo "🔓 Making sample files publicly readable..."
+echo " Making sample files publicly readable..."
 gsutil acl ch -u AllUsers:R "gs://$BUCKET_NAME/logs/sample.log"
 gsutil acl ch -u AllUsers:R "gs://$BUCKET_NAME/data/sample.txt"
 
 # Get bucket information
-echo "📊 Getting bucket information..."
+echo " Getting bucket information..."
 BUCKET_INFO=$(gsutil stat "gs://$BUCKET_NAME")
 
 echo
 echo "✅ Bucket '$BUCKET_NAME' created successfully!"
 echo
-echo "📊 Bucket Details:"
+echo " Bucket Details:"
 echo "   Name: gs://$BUCKET_NAME"
 echo "   Location: $LOCATION"
 echo "   Storage Class: $STORAGE_CLASS"
@@ -139,16 +139,16 @@ echo "   Uniform Access: Enabled"
 echo "   Versioning: Enabled"
 echo "   Lifecycle: Configured (30d → Nearline, 90d → Coldline, 365d → Delete)"
 echo
-echo "📁 Bucket Structure:"
+echo " Bucket Structure:"
 echo "   gs://$BUCKET_NAME/logs/          # Application logs"
 echo "   gs://$BUCKET_NAME/backups/       # Database backups"
 echo "   gs://$BUCKET_NAME/data/          # Application data"
 echo
-echo "🔍 Sample Files:"
+echo " Sample Files:"
 echo "   Public: https://storage.googleapis.com/$BUCKET_NAME/logs/sample.log"
 echo "   Public: https://storage.googleapis.com/$BUCKET_NAME/data/sample.txt"
 echo
-echo "🛠️  Management Commands:"
+echo "️  Management Commands:"
 echo "   List: gsutil ls gs://$BUCKET_NAME/**"
 echo "   Upload: gsutil cp local-file.txt gs://$BUCKET_NAME/"
 echo "   Download: gsutil cp gs://$BUCKET_NAME/file.txt ."
@@ -156,11 +156,11 @@ echo "   ACL: gsutil acl get gs://$BUCKET_NAME"
 echo "   IAM: gsutil iam get gs://$BUCKET_NAME"
 echo "   Delete: gsutil rm -r gs://$BUCKET_NAME"
 echo
-echo "💰 Cost Optimization:"
+echo " Cost Optimization:"
 echo "   • Files move to Nearline after 30 days"
 echo "   • Files move to Coldline after 90 days"
 echo "   • Files deleted after 365 days"
 echo
-echo "🧪 Test the bucket:"
+echo " Test the bucket:"
 echo "   gsutil ls gs://$BUCKET_NAME/**"
 echo "   curl https://storage.googleapis.com/$BUCKET_NAME/data/sample.txt"

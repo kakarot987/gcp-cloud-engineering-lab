@@ -15,11 +15,11 @@ REGION="${3:-us-central1}"
 # Configuration
 PROJECT_ID="$(gcloud config get-value project)"
 
-echo "🚀 Deploying to Cloud Run"
-echo "📍 Project: $PROJECT_ID"
-echo "🐳 Service: $SERVICE_NAME"
-echo "🖼️  Image: $IMAGE_URL"
-echo "🌍 Region: $REGION"
+echo " Deploying to Cloud Run"
+echo " Project: $PROJECT_ID"
+echo " Service: $SERVICE_NAME"
+echo "️  Image: $IMAGE_URL"
+echo " Region: $REGION"
 echo
 
 # Validate inputs
@@ -30,9 +30,9 @@ if [ -z "$PROJECT_ID" ]; then
 fi
 
 # Enable Cloud Run API if not already enabled
-echo "📦 Checking Cloud Run API..."
+echo " Checking Cloud Run API..."
 if ! gcloud services list --enabled --filter="config.name:run.googleapis.com" --format="value(config.name)" | grep -q "run.googleapis.com"; then
-    echo "🔧 Enabling Cloud Run API..."
+    echo " Enabling Cloud Run API..."
     gcloud services enable run.googleapis.com --quiet
 fi
 
@@ -51,10 +51,10 @@ else
 fi
 
 # Deploy to Cloud Run
-echo "🚀 Deploying service..."
+echo " Deploying service..."
 
 if [ "$UPDATE_MODE" = true ]; then
-    echo "📝 Updating existing service..."
+    echo " Updating existing service..."
     gcloud run deploy "$SERVICE_NAME" \
         --image="$IMAGE_URL" \
         --region="$REGION" \
@@ -68,7 +68,7 @@ if [ "$UPDATE_MODE" = true ]; then
         --project="$PROJECT_ID" \
         --quiet
 else
-    echo "🏗️  Creating new service..."
+    echo "️  Creating new service..."
     gcloud run deploy "$SERVICE_NAME" \
         --image="$IMAGE_URL" \
         --region="$REGION" \
@@ -92,7 +92,7 @@ SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
 echo
 echo "✅ Cloud Run deployment successful!"
 echo
-echo "📊 Service Details:"
+echo " Service Details:"
 echo "   Name: $SERVICE_NAME"
 echo "   Region: $REGION"
 echo "   URL: $SERVICE_URL"
@@ -103,16 +103,16 @@ echo "   Max Instances: 10"
 echo "   Timeout: 300s"
 echo "   Concurrency: 80"
 echo
-echo "🧪 Test the service:"
+echo " Test the service:"
 echo "   curl $SERVICE_URL"
 echo "   Open $SERVICE_URL in your browser"
 echo
-echo "📋 Management Commands:"
+echo " Management Commands:"
 echo "   Logs: gcloud logging read \"resource.type=cloud_run_revision AND resource.labels.service_name=$SERVICE_NAME\" --limit=10"
 echo "   Update: gcloud run deploy $SERVICE_NAME --image=new-image --region=$REGION"
 echo "   Delete: gcloud run services delete $SERVICE_NAME --region=$REGION"
 echo
-echo "🔧 Advanced Configuration:"
+echo " Advanced Configuration:"
 echo "   # Set environment variables"
 echo "   gcloud run deploy $SERVICE_NAME --set-env-vars KEY1=value1,KEY2=value2 --region=$REGION"
 echo
