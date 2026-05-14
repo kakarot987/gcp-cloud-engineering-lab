@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-gke-service
+  labels:
+    app: hello-gke
+    version: v1
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: hello-gke
+
+---
+# Optional: LoadBalancer Service for external access
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-gke-loadbalancer
+  labels:
+    app: hello-gke
+    version: v1
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: hello-gke
+  # Load balancer annotations for GCP
+  annotations:
+    cloud.google.com/load-balancer-type: "Internal"  # Use "External" for internet-facing
+
+---
+# Optional: Ingress for advanced routing
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-gke-ingress
+  labels:
+    app: hello-gke
+    version: v1
+  annotations:
+    kubernetes.io/ingress.class: "gce"  # Google Cloud Load Balancer
+    kubernetes.io/ingress.global-static-ip-name: "hello-gke-ip"  # Optional static IP
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: hello-gke-service
+            port:
+              number: 80

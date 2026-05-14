@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-gke
+  labels:
+    app: hello-gke
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-gke
+  template:
+    metadata:
+      labels:
+        app: hello-gke
+        version: v1
+    spec:
+      # Service account for workload identity (optional)
+      # serviceAccountName: hello-gke-sa
+
+      containers:
+      - name: hello-gke
+        image: gcr.io/YOUR_PROJECT_ID/hello-gke:latest
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+
+        # Environment variables from ConfigMap
+        env:
+        - name: ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: hello-gke-config
+              key: ENVIRONMENT
+        - name: GREETING_MESSAGE
+          valueFrom:
+            configMapKeyRef:
+              name: hello-gke-config
+              key: GREETING_MESSAGE
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: hello-gke-config
+              key: LOG_LEVEL
+
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /api/v1/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+
+        # Startup probe (for slow-starting containers)
+        startupProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+          successThreshold: 1
+
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+
+        # Volume mounts for logs (if needed)
+        volumeMounts:
+        - name: tmp-volume
+          mountPath: /tmp
+        - name: logs-volume
+          mountPath: /app/logs
+
+      # Volumes
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
+
+      # Security context for the pod
+      securityContext:
+        fsGroup: 1001
+
+      # Node affinity (optional - for production workloads)
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: cloud.google.com/gke-nodepool
+      #           operator: In
+      #           values:
+      #           - standard-node-pool
+
+      # Tolerations (optional - for spot instances)
+      # tolerations:
+      # - key: "cloud.google.com/gke-spot"
+      #   operator: "Equal"
+      #   value: "true"
+      #   effect: "NoSchedule"
