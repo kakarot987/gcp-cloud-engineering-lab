@@ -147,7 +147,6 @@ resource "google_container_node_pool" "standard_nodes" {
     # Shielded nodes for security
     shielded_instance_config {
       enable_secure_boot          = true
-      enable_vtpm                 = true
       enable_integrity_monitoring = true
     }
   }
