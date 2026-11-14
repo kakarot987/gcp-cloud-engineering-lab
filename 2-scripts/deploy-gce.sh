@@ -22,6 +22,7 @@ BOOT_DISK_SIZE="20GB"
 TAGS="web-server"
 SERVICE_ACCOUNT=""
 
+echo "WARNING: This script creates a billable VM and disk. Remove both after the lab."
 echo " Deploying GCE Instance: $INSTANCE_NAME"
 echo " Project: $PROJECT_ID"
 echo " Zone: $ZONE"
@@ -92,62 +93,49 @@ server {
 }
 NGINX_CONF
 
-# Create a simple web page
+# Fetch only selected non-secret metadata on the INSTANCE, not from a visitor's browser.
+metadata() {
+    curl --fail --silent --show-error --max-time 5 \
+        -H 'Metadata-Flavor: Google' \
+        "http://metadata.google.internal/computeMetadata/v1/$1" || echo unavailable
+}
+export LAB_HOSTNAME="$(metadata instance/hostname)"
+export LAB_INTERNAL_IP="$(metadata instance/network-interfaces/0/ip)"
+export LAB_ZONE="$(metadata instance/zone)"
+export LAB_PROJECT="$(metadata project/project-id)"
+
+# Render a static HTML page; html.escape prevents metadata values injecting markup.
 cat > /var/www/html/index.html << 'HTML'
 <!DOCTYPE html>
-<html>
-<head>
-    <title>GCP ACE Lab - Web Server</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .info { background: #f5f5f5; padding: 20px; border-radius: 5px; }
-    </style>
-</head>
+<html lang="en"><head><meta charset="utf-8"><title>GCP ACE Lab</title></head>
 <body>
-    <div class="container">
-        <h1> GCP Associate Cloud Engineer Lab</h1>
-        <div class="info">
-            <h2>Instance Information</h2>
-            <p><strong>Hostname:</strong> <span id="hostname"></span></p>
-            <p><strong>IP Address:</strong> <span id="ip"></span></p>
-            <p><strong>Zone:</strong> <span id="zone"></span></p>
-            <p><strong>Project:</strong> <span id="project"></span></p>
-            <p><strong>Timestamp:</strong> <span id="timestamp"></span></p>
-        </div>
-    </div>
-
-    <script>
-        // Get instance metadata
-        fetch('http://metadata.google.internal/computeMetadata/v1/instance/hostname', {
-            headers: {'Metadata-Flavor': 'Google'}
-        })
-        .then(response => response.text())
-        .then(hostname => document.getElementById('hostname').textContent = hostname);
-
-        fetch('http://metadata.google.internal/computeMetadata/v1/instance/network-interfaces/0/ip', {
-            headers: {'Metadata-Flavor': 'Google'}
-        })
-        .then(response => response.text())
-        .then(ip => document.getElementById('ip').textContent = ip);
-
-        fetch('http://metadata.google.internal/computeMetadata/v1/instance/zone', {
-            headers: {'Metadata-Flavor': 'Google'}
-        })
-        .then(response => response.text())
-        .then(zone => document.getElementById('zone').textContent = zone.split('/').pop());
-
-        fetch('http://metadata.google.internal/computeMetadata/v1/project/project-id', {
-            headers: {'Metadata-Flavor': 'Google'}
-        })
-        .then(response => response.text())
-        .then(project => document.getElementById('project').textContent = project);
-
-        document.getElementById('timestamp').textContent = new Date().toLocaleString();
-    </script>
-</body>
-</html>
+<h1>GCP Associate Cloud Engineer Lab</h1>
+<p>Hostname: __HOSTNAME__</p>
+<p>Internal IP: __INTERNAL_IP__</p>
+<p>Zone: __ZONE__</p>
+<p>Project: __PROJECT__</p>
+<p>Generated (UTC): __TIMESTAMP__</p>
+</body></html>
 HTML
+python3 - << 'PYTHON'
+import html
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+page = Path("/var/www/html/index.html")
+content = page.read_text()
+values = {
+    "__HOSTNAME__": os.environ.get("LAB_HOSTNAME", "unavailable"),
+    "__INTERNAL_IP__": os.environ.get("LAB_INTERNAL_IP", "unavailable"),
+    "__ZONE__": os.environ.get("LAB_ZONE", "unavailable").rsplit("/", 1)[-1],
+    "__PROJECT__": os.environ.get("LAB_PROJECT", "unavailable"),
+    "__TIMESTAMP__": datetime.now(timezone.utc).isoformat(),
+}
+for token, value in values.items():
+    content = content.replace(token, html.escape(value, quote=True))
+page.write_text(content)
+PYTHON
 
 # Start nginx
 systemctl enable nginx

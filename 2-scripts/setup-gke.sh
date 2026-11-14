@@ -18,6 +18,7 @@ REGION="${ZONE%-*}"
 MACHINE_TYPE="n1-standard-1"
 DISK_SIZE="50GB"
 
+echo "WARNING: This script creates billable GKE nodes and a load balancer. Delete resources after the lab."
 echo " Creating GKE Cluster"
 echo " Project: $PROJECT_ID"
 echo "☸️  Cluster: $CLUSTER_NAME"
@@ -52,12 +53,17 @@ if ! gcloud compute networks describe "$VPC_NAME" --project="$PROJECT_ID" &>/dev
         --project="$PROJECT_ID" \
         --quiet
 
-    # Create subnet with secondary ranges for GKE
+fi
+
+# Ensure the subnet exists, including when the VPC already exists.
+# Primary, pods and services CIDRs MUST NOT overlap.
+if ! gcloud compute networks subnets describe "${VPC_NAME}-subnet" \
+    --region="$REGION" --project="$PROJECT_ID" &>/dev/null; then
     gcloud compute networks subnets create "${VPC_NAME}-subnet" \
         --network="$VPC_NAME" \
         --region="$REGION" \
         --range=10.0.0.0/16 \
-        --secondary-range=pods=10.4.0.0/14,services=10.0.16.0/20 \
+        --secondary-range=pods=10.4.0.0/14,services=10.8.0.0/20 \
         --project="$PROJECT_ID" \
         --quiet
 fi
@@ -72,6 +78,8 @@ gcloud container clusters create "$CLUSTER_NAME" \
     --network="$VPC_NAME" \
     --subnetwork="${VPC_NAME}-subnet" \
     --enable-ip-alias \
+    --cluster-secondary-range-name=pods \
+    --services-secondary-range-name=services \
     --enable-autoscaling \
     --min-nodes=1 \
     --max-nodes=5 \

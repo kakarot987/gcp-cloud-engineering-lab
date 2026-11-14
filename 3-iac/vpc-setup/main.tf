@@ -89,7 +89,7 @@ resource "google_compute_router_nat" "nat_gateway" {
 
 # Firewall Rules
 
-# Allow SSH from anywhere (for learning - restrict in production)
+# Restrict SSH to IAP TCP forwarding by default; requires IAP IAM permissions.
 resource "google_compute_firewall" "allow_ssh" {
   name    = "${var.vpc_name}-allow-ssh"
   network = google_compute_network.vpc_network.name
@@ -99,7 +99,7 @@ resource "google_compute_firewall" "allow_ssh" {
     ports    = ["22"]
   }
 
-  source_ranges = ["0.0.0.0/0"]
+  source_ranges = var.ssh_source_ranges
   target_tags   = ["ssh"]
 }
 
@@ -158,6 +158,6 @@ resource "google_compute_firewall" "allow_gke" {
 
 # Static IP for load balancer (optional)
 resource "google_compute_global_address" "lb_ip" {
-  name = "${var.vpc_name}-lb-ip"
+  name        = "${var.vpc_name}-lb-ip"
   description = "Static IP for load balancer"
 }

@@ -2,10 +2,7 @@
 # Optimized for Kubernetes deployment with security and performance best practices
 
 # Build stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
-
-# Install Maven
-RUN apk add --no-cache maven
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -15,7 +12,7 @@ COPY pom.xml .
 COPY src ./src
 
 # Build the application with Maven
-RUN mvn clean package -DskipTests
+RUN mvn -B -ntp clean verify
 
 # Runtime stage
 FROM eclipse-temurin:17-jre-alpine

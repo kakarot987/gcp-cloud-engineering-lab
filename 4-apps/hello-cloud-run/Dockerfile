@@ -1,44 +1,17 @@
-# Multi-stage Docker build for Hello Cloud Run
-# Demonstrates best practices for containerizing Spring Boot applications
-
-# Build stage
-FROM eclipse-temurin:17-jdk-alpine AS builder
-
-# Set working directory
+# Maven is provided by the builder image; no mvnw wrapper is required.
+FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
-
-# Copy Maven files for dependency caching
 COPY pom.xml .
 COPY src ./src
+RUN mvn -B -ntp clean verify
 
-# Build the application
-RUN ./mvnw clean package -DskipTests
-
-# Runtime stage
 FROM eclipse-temurin:17-jre-alpine
-
-# Add a non-root user for security
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup
-
-# Set working directory
+RUN addgroup -S -g 1001 appgroup && adduser -S -u 1001 -G appgroup appuser
 WORKDIR /app
-
-# Copy the JAR file from builder stage
-COPY --from=builder /app/target/*.jar app.jar
-
-# Change ownership to non-root user
+COPY --from=builder /app/target/*.jar /app/app.jar
 RUN chown -R appuser:appgroup /app
-
-# Switch to non-root user
 USER appuser
-
-# Expose port 8080
 EXPOSE 8080
-
-# Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
-
-# Run the application
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD wget -q -O /dev/null http://localhost:8080/actuator/health || exit 1
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

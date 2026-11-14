@@ -83,9 +83,12 @@ resource "google_container_cluster" "gke_cluster" {
 
   # Master authorized networks (restrict access)
   master_authorized_networks_config {
-    cidr_blocks {
-      cidr_block   = var.authorized_networks[0]
-      display_name = "Public subnet"
+    dynamic "cidr_blocks" {
+      for_each = var.authorized_networks
+      content {
+        cidr_block   = cidr_blocks.value
+        display_name = "Authorized operator"
+      }
     }
   }
 
@@ -197,13 +200,11 @@ resource "google_container_node_pool" "spot_nodes" {
       node-type   = "spot"
     }
 
-    taints = [
-      {
-        key    = "cloud.google.com/gke-spot"
-        value  = "true"
-        effect = "NO_SCHEDULE"
-      }
-    ]
+    taint {
+      key    = "cloud.google.com/gke-spot"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }
 
     metadata = {
       disable-legacy-endpoints = "true"

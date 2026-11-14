@@ -76,3 +76,15 @@ variable "services_private_secondary_cidr" {
   type        = string
   default     = "10.4.0.0/20"
 }
+
+# IAP TCP forwarding source range; allow only authenticated IAP users to SSH.
+variable "ssh_source_ranges" {
+  description = "Source ranges for SSH ingress (default: GCP IAP TCP forwarding)"
+  type        = list(string)
+  default     = ["35.235.240.0/20"]
+
+  validation {
+    condition     = length(var.ssh_source_ranges) > 0 && alltrue([for cidr in var.ssh_source_ranges : can(cidrhost(cidr, 0)) && cidr != "0.0.0.0/0"])
+    error_message = "Provide restricted source CIDRs; 0.0.0.0/0 is not allowed."
+  }
+}
