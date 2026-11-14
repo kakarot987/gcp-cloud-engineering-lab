@@ -1,0 +1,86 @@
+name: Validate applications and infrastructure
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  java:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [hello-cloud-run, hello-gke]
+    defaults:
+      run:
+        working-directory: 4-apps/${{ matrix.app }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+          cache-dependency-path: 4-apps/${{ matrix.app }}/pom.xml
+      - name: Test and package
+        run: mvn -B -ntp clean verify
+
+  docker:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [hello-cloud-run, hello-gke]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image and run Maven tests in builder
+        run: docker build -t ${{ matrix.app }}:ci 4-apps/${{ matrix.app }}
+
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        directory: [vpc-setup, gke-cluster]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.8'
+      - name: Check formatting
+        run: terraform fmt -check -recursive 3-iac/
+      - name: Initialize without cloud backend
+        working-directory: 3-iac/${{ matrix.directory }}
+        run: terraform init -backend=false -input=false
+      - name: Validate Terraform syntax and provider schema
+        working-directory: 3-iac/${{ matrix.directory }}
+        run: terraform validate -no-color
+
+  shell-and-kubernetes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax
+        run: |
+          for script in 2-scripts/*.sh; do
+            bash -n "$script"
+          done
+      - name: Parse Kubernetes YAML and inspect service annotations
+        run: |
+          python -m pip install PyYAML==6.0.2
+          python - <<'PYTHON'
+          from pathlib import Path
+          import yaml
+          for path in Path("4-apps/hello-gke/k8s").glob("*.yaml"):
+              for item in yaml.safe_load_all(path.read_text()):
+                  if not item:
+                      continue
+                  if item.get("kind") == "Service":
+                      assert "annotations" not in item.get("spec", {}), f"spec.annotations in {path}"
+                  assert "apiVersion" in item and "kind" in item
+          print("Kubernetes YAML parsed successfully")
+          PYTHON
