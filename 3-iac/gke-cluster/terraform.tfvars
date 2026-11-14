@@ -16,8 +16,9 @@ cluster_name = "ace-learning-cluster"
 # Optional: GKE master CIDR (private cluster)
 master_cidr = "172.16.0.0/28"
 
-# Optional: Authorized networks for master access (restrict in production)
-authorized_networks = ["0.0.0.0/0"]
+# Replace with your actual public IP/32 before deployment.
+# This documentation-only TEST-NET address does not grant you access.
+authorized_networks = ["192.0.2.0/32"]
 
 # Standard Node Pool Configuration
 standard_node_count   = 2

@@ -1,0 +1,28 @@
+# Local IDE state
+.idea/
+*.iml
+.vscode/
+
+# Java build artifacts
+**/target/
+*.class
+*.log
+
+# Terraform caches, state and plans
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local credentials and environment
+.env
+.env.*
+!.env.example
+*.key
+*.pem

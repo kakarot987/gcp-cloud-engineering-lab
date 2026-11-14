@@ -1,6 +1,10 @@
 package com.example.hellogke;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.availability.ApplicationAvailability;
+import org.springframework.boot.availability.ReadinessState;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +32,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1")
 public class HelloController {
+
+    private final ApplicationAvailability availability;
+    private final HealthEndpoint healthEndpoint;
+
+    public HelloController(ApplicationAvailability availability, HealthEndpoint healthEndpoint) {
+        this.availability = availability;
+        this.healthEndpoint = healthEndpoint;
+    }
 
     @Value("${spring.application.name:hello-gke}")
     private String applicationName;
@@ -127,40 +139,30 @@ public class HelloController {
     }
 
     /**
-     * Health check endpoint for Kubernetes.
-     *
-     * @return Health status for liveness and readiness probes
+     * Application health status is supplied by the actual Actuator health contributors.
+     * This sample has no database connection, so no database status is fabricated.
      */
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> health() {
         Map<String, Object> response = createBaseResponse();
-        response.put("status", "UP");
-        response.put("service", applicationName);
-
-        Map<String, String> checks = new HashMap<>();
-        checks.put("application", "UP");
-        checks.put("readiness", "READY");
-        checks.put("liveness", "ALIVE");
-        checks.put("database", "UP"); // Simulated
-
-        response.put("checks", checks);
-
-        return ResponseEntity.ok(response);
+        String status = healthEndpoint.health().getStatus().getCode();
+        response.put("status", status);
+        response.put("source", "Spring Boot Actuator");
+        return ResponseEntity.status("UP".equals(status) ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE)
+                .body(response);
     }
 
     /**
-     * Readiness check endpoint.
-     *
-     * @return Readiness status for Kubernetes probes
+     * Readiness reflects Spring Boot's actual availability state, not a hard-coded READY.
      */
     @GetMapping("/ready")
     public ResponseEntity<Map<String, Object>> ready() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "READY");
-        response.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        response.put("service", applicationName);
-
-        return ResponseEntity.ok(response);
+        boolean ready = availability.getReadinessState() == ReadinessState.ACCEPTING_TRAFFIC;
+        Map<String, Object> response = createBaseResponse();
+        response.put("status", ready ? "READY" : "NOT_READY");
+        response.put("source", "Spring Boot ApplicationAvailability");
+        return ResponseEntity.status(ready ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE)
+                .body(response);
     }
 
     /**

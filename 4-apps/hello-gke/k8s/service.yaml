@@ -24,6 +24,8 @@ metadata:
   labels:
     app: hello-gke
     version: v1
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal"
 spec:
   type: LoadBalancer
   ports:
@@ -33,9 +35,6 @@ spec:
     name: http
   selector:
     app: hello-gke
-  # Load balancer annotations for GCP
-  annotations:
-    cloud.google.com/load-balancer-type: "Internal"  # Use "External" for internet-facing
 
 ---
 # Optional: Ingress for advanced routing
@@ -48,7 +47,6 @@ metadata:
     version: v1
   annotations:
     kubernetes.io/ingress.class: "gce"  # Google Cloud Load Balancer
-    kubernetes.io/ingress.global-static-ip-name: "hello-gke-ip"  # Optional static IP
 spec:
   rules:
   - http:

@@ -1,111 +1,62 @@
-# 3-iac/ - Infrastructure as Code with Terraform
+# Terraform infrastructure labs
 
-This directory contains Terraform configurations for provisioning GCP infrastructure, demonstrating Infrastructure as Code (IaC) best practices for the Associate Cloud Engineer certification.
+These are **learning examples, not production-ready infrastructure**. Applying them creates billable Google Cloud resources including GKE nodes, Cloud NAT, a global IP address, and load balancing resources.
 
-## 📁 Directory Structure
+## Layout
 
-```
-3-iac/
-├── vpc-setup/           # VPC network, subnets, firewall rules
-│   ├── main.tf         # Main configuration
-│   ├── variables.tf    # Input variables
-│   ├── outputs.tf      # Output values
-│   └── terraform.tfvars # Variable values
-└── gke-cluster/         # GKE cluster with node pools
-    ├── main.tf
-    ├── variables.tf
-    ├── outputs.tf
-    └── terraform.tfvars
-```
+- `vpc-setup/`: VPC, public and private subnets, GKE secondary CIDRs, firewall rules, NAT, and a reserved global address.
+- `gke-cluster/`: Private-node GKE cluster, standard and Spot node pools, workload identity and monitoring. References an existing VPC (it does not manage remote state between folders).
 
-## 🚀 Quick Start
+**Not implemented:** VPC peering, remote Terraform state backend, and state locking. Each directory uses local state unless you explicitly configure your own backend. Keep local `terraform.tfstate` files private and avoid concurrent applies.
 
-### Prerequisites
+## Prerequisites
+
+Install Terraform, Google Cloud SDK, and authenticate using an account authorized to access the selected GCP project.
+
 ```bash
-# Install Terraform
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-sudo apt-get update && sudo apt-get install terraform
-
-# Authenticate with GCP
 gcloud auth application-default login
+gcloud config set project YOUR_PROJECT_ID
+gcloud services enable compute.googleapis.com container.googleapis.com iam.googleapis.com
 ```
 
-### Deploy VPC Infrastructure
+Edit both `terraform.tfvars` files with your actual project ID. In `gke-cluster/terraform.tfvars`, **replace `192.0.2.0/32` with your actual operator public IPv4 address as a /32**. This placeholder is a documentation-only network and deliberately does not permit access. The SSH firewall allows GCP IAP's `35.235.240.0/20` range by default; IAP IAM permissions must also be configured to connect.
+
+## Validate first (no resources created)
+
+```bash
+terraform fmt -recursive 3-iac
+for dir in 3-iac/vpc-setup 3-iac/gke-cluster; do
+  (cd "$dir" && terraform init -backend=false && terraform validate)
+done
+```
+
+For a live plan, GCP credentials, APIs, and correct project-specific inputs are required:
+
 ```bash
 cd 3-iac/vpc-setup
-terraform init
+terraform plan
+terraform apply
+cd ../gke-cluster
 terraform plan
 terraform apply
 ```
 
-### Deploy GKE Cluster
-```bash
-cd 3-iac/gke-cluster
-terraform init
-terraform plan
-terraform apply
-```
+**Do not run `apply` unless you accept costs.** A plan is not proof of a successful deployment. The GKE module expects the VPC and both subnets to exist already.
 
-## 📚 What You'll Learn
+## Cleanup and cost verification
 
-### VPC Setup Module
-- **Custom VPC Networks** - Private networking isolation
-- **Subnets** - Regional IP address management
-- **Firewall Rules** - Security policies for traffic control
-- **Cloud NAT** - Outbound internet access for private instances
-- **VPC Peering** - Connecting multiple VPC networks
-
-### GKE Cluster Module
-- **Kubernetes Clusters** - Container orchestration
-- **Node Pools** - Compute resources for pods
-- **Workload Identity** - Secure service account access
-- **Network Policies** - Pod-to-pod communication control
-- **Auto-scaling** - Dynamic resource management
-
-## 🎯 Certification Benefits
-
-- **ACE Exam Topics**: Infrastructure automation, networking, containers
-- **Production Skills**: Version control, state management, modular design
-- **Best Practices**: Security, cost optimization, reliability patterns
-
-## 🛠️ Terraform Best Practices Demonstrated
-
-- **Modular Architecture** - Reusable, maintainable code
-- **Variable Management** - Flexible configuration
-- **State Management** - Remote state with locking
-- **Resource Dependencies** - Proper ordering and references
-- **Output Values** - Exposing important information
-- **Documentation** - Clear comments and descriptions
-
-## 🔧 Customization
-
-Edit `terraform.tfvars` files to customize:
-- Project ID and region
-- Network CIDR ranges
-- Machine types and disk sizes
-- Node pool configurations
-- Security settings
-
-## 🧹 Cleanup
+Destroy the cluster *first*, then the network resources, using the same credentials and state files used for apply:
 
 ```bash
-# Destroy GKE cluster first
-cd 3-iac/gke-cluster
-terraform destroy
-
-# Then destroy VPC
-cd ../vpc-setup
-terraform destroy
+(cd 3-iac/gke-cluster && terraform destroy)
+(cd 3-iac/vpc-setup && terraform destroy)
 ```
 
-## 📋 Next Steps
+Confirm both Terraform states have no remaining managed resources using `terraform state list`. Also check GCP Console for leftover GKE clusters, Compute Engine VMs, reserved addresses, NAT routers, persistent disks and load balancers; inspect the Billing console to confirm no unexpected ongoing charges. Terraform state alone may not include resources created outside Terraform.
 
-After deploying infrastructure, you can:
-1. Deploy applications from `4-apps/` directory
-2. Use scripts from `2-scripts/` for additional configuration
-3. Monitor resources with commands from `5-cheat-sheets/`
+## Technical limitations
 
----
-
-**Note**: Remember to enable required APIs and set billing before deploying!
+- These two directories are independent root modules, not reusable child modules.
+- Project IAM, API enablement and state backends require operator setup.
+- Do not use `0.0.0.0/0` for SSH or GKE control-plane access.
+- GKE private nodes still require correctly configured NAT egress and IAM for image pulls.

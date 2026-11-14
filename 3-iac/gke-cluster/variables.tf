@@ -50,9 +50,14 @@ variable "master_cidr" {
 }
 
 variable "authorized_networks" {
-  description = "List of CIDR blocks authorized to access the master"
+  description = "Operator source CIDRs for Kubernetes API access; replace the non-routable example before deploying"
   type        = list(string)
-  default     = ["0.0.0.0/0"] # Allow from anywhere for learning (restrict in production)
+  default     = ["192.0.2.0/32"]
+
+  validation {
+    condition     = length(var.authorized_networks) > 0 && alltrue([for cidr in var.authorized_networks : can(cidrhost(cidr, 0)) && cidr != "0.0.0.0/0"])
+    error_message = "Provide at least one valid, restricted CIDR (not 0.0.0.0/0)."
+  }
 }
 
 # Standard Node Pool Configuration

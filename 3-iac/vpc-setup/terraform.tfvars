@@ -20,3 +20,6 @@ services_secondary_cidr = "10.2.0.0/20"
 
 pods_private_secondary_cidr     = "10.3.0.0/16"
 services_private_secondary_cidr = "10.4.0.0/20"
+
+# SSH access via Identity-Aware Proxy (IAP) only by default.
+ssh_source_ranges = ["35.235.240.0/20"]
